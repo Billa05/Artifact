@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react"
-import { Play, Pause, Download, AudioWaveformIcon as Waveform } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Play, Pause, Download, AudioWaveformIcon as Waveform, Loader } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useVoiceContext } from "../context/VoiceContext"
 
 export default function TranscribePage() {
     const [text, setText] = useState("Enter the text you want to convert to speech using your cloned voice.")
@@ -15,45 +16,84 @@ export default function TranscribePage() {
     const [clarity, setClarity] = useState(70)
     const [exportFormat, setExportFormat] = useState("mp3")
     const [selectedModel, setSelectedModel] = useState("voice-1")
-
-    // Simulate audio wave generation based on text
+    
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+    const { recordedAudio, refText, generatedAudio, isLoading, generateVoice } = useVoiceContext()
+    
+    // Create an audio URL for the generated audio
+    const [audioUrl, setAudioUrl] = useState<string | null>(null)
+    
     useEffect(() => {
-        if (text) {
-            // Calculate estimated audio length based on word count
-            const wordCount = text.split(/\s+/).filter(Boolean).length
-            const estimatedLength = Math.max(1, Math.min(180, wordCount * 0.5))
-            setAudioLength(estimatedLength)
-        } else {
-            setAudioLength(0)
-        }
-    }, [text])
-
-    // Simulate playback
-    useEffect(() => {
-        let interval: NodeJS.Timeout | null = null
-
-        if (isPlaying && currentTime < audioLength) {
-            interval = setInterval(() => {
-                setCurrentTime((prev) => {
-                    if (prev >= audioLength) {
-                        setIsPlaying(false)
-                        return audioLength
+        if (generatedAudio) {
+            const url = URL.createObjectURL(generatedAudio)
+            setAudioUrl(url)
+            
+            // Load audio metadata to get duration
+            if (audioRef.current) {
+                audioRef.current.src = url
+                audioRef.current.onloadedmetadata = () => {
+                    if (audioRef.current) {
+                        setAudioLength(audioRef.current.duration)
                     }
-                    return prev + 0.1
-                })
+                }
+            }
+            
+            // Clean up URL when component unmounts
+            return () => URL.revokeObjectURL(url)
+        }
+    }, [generatedAudio])
+    
+    useEffect(() => {
+        // Update playback progress
+        let interval: NodeJS.Timeout | null = null
+        
+        if (isPlaying && audioRef.current) {
+            interval = setInterval(() => {
+                if (audioRef.current) {
+                    setCurrentTime(audioRef.current.currentTime)
+                    
+                    if (audioRef.current.ended) {
+                        setIsPlaying(false)
+                    }
+                }
             }, 100)
         }
-
+        
         return () => {
             if (interval) clearInterval(interval)
         }
-    }, [isPlaying, currentTime, audioLength])
-
+    }, [isPlaying])
+    
+    
     const togglePlayback = () => {
-        if (currentTime >= audioLength) {
-            setCurrentTime(0)
+        if (!audioRef.current || !audioUrl) return;
+        
+        if (isPlaying) {
+            audioRef.current.pause()
+        } else {
+            if (audioRef.current.ended) {
+                audioRef.current.currentTime = 0
+            }
+            audioRef.current.play()
         }
+        
         setIsPlaying(!isPlaying)
+    }
+    
+    const handleExport = () => {
+        if (!audioUrl) return;
+        
+        // Create a temporary link to download the audio
+        const downloadLink = document.createElement('a')
+        downloadLink.href = audioUrl
+        downloadLink.download = `voice-clone.${exportFormat}`
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+    }
+    
+    const handleGenerateVoice = async () => {
+        await generateVoice(text)
     }
 
     const formatTime = (seconds: number) => {
@@ -66,7 +106,7 @@ export default function TranscribePage() {
     const waveBars = Array.from({ length: 120 }, (_, i) => {
         // Create a pattern that looks like a waveform
         const position = i / 120
-        const progress = currentTime / audioLength
+        const progress = audioLength ? currentTime / audioLength : 0
 
         // Different height calculation for played vs unplayed portions
         let height
@@ -96,6 +136,9 @@ export default function TranscribePage() {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Hidden audio element for playing the generated audio */}
+            <audio ref={audioRef} style={{ display: 'none' }} />
+            
             <div className="flex flex-col gap-8">
                 <div className="glass-card rounded-2xl p-6 border border-gray-800/50 shadow-xl">
                     <label className="text-sm font-medium text-gray-300 mb-3 block gradient-text">Voice Model</label>
@@ -119,6 +162,20 @@ export default function TranscribePage() {
                         className="h-64 bg-gray-900/70 border-gray-700/50 resize-none focus:ring-purple-500 text-base"
                         placeholder="Enter text to convert to speech..."
                     />
+                    
+                    <Button 
+                        onClick={handleGenerateVoice}
+                        disabled={isLoading || !recordedAudio || !text} 
+                        className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader className="mr-2 h-4 w-4 animate-spin" /> Generating...
+                            </>
+                        ) : (
+                            'Generate Voice'
+                        )}
+                    </Button>
                 </div>
             </div>
 
@@ -189,13 +246,14 @@ export default function TranscribePage() {
                         {waveBars}
                         <div
                             className="absolute bottom-0 h-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 pointer-events-none"
-                            style={{ width: `${(currentTime / audioLength) * 100}%` }}
+                            style={{ width: `${audioLength ? (currentTime / audioLength) * 100 : 0}%` }}
                         />
                     </div>
 
                     <div className="flex justify-between items-center">
                         <Button
                             onClick={togglePlayback}
+                            disabled={!audioUrl || isLoading}
                             className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg shadow-blue-900/30"
                         >
                             {isPlaying ? (
@@ -222,7 +280,11 @@ export default function TranscribePage() {
                                 </SelectContent>
                             </Select>
 
-                            <Button className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-lg shadow-purple-900/30">
+                            <Button 
+                                onClick={handleExport}
+                                disabled={!audioUrl}
+                                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 shadow-lg shadow-purple-900/30"
+                            >
                                 <Download className="mr-2 h-4 w-4" /> Export
                             </Button>
                         </div>
@@ -232,4 +294,3 @@ export default function TranscribePage() {
         </div>
     )
 }
-

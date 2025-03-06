@@ -1,11 +1,13 @@
 from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS  # Add this import
 import os
 from werkzeug.utils import secure_filename
 from f5_tts.api import F5TTS
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'AI-Backend/F5-TTS/tests/output'  # Set the upload folder path
-app.config['OUTPUT_FOLDER'] = 'AI-Backend/F5-TTS/tests/upload'  # Set the output folder path
+CORS(app)  # Enable CORS for all routes
+app.config['UPLOAD_FOLDER'] = 'AI-Backend/F5-TTS/tests/output'
+app.config['OUTPUT_FOLDER'] = 'AI-Backend/F5-TTS/tests/upload'
 
 # Ensure the folders exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
