@@ -251,9 +251,8 @@ export default function RecordPage() {
                                 max={2}
                                 step={0.1}
                                 onValueChange={(value) => setScrollSpeed(value[0])}
-                                className="w-24"
+                                className="w-40 [&>span:first-child]:h-1.5 [&>span:first-child]:bg-gray-700"
                             />
-                            <Settings className="h-4 w-4 text-gray-400" />
                         </div>
                     </div>
                 </div>
