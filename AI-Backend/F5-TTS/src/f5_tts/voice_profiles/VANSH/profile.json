@@ -1,0 +1,45 @@
+{
+    "name": "VANSH",
+    "description": "teammate",
+    "created_at": "2025-03-07 02:12:58",
+    "samples": {
+        "TESTING1": {
+            "path": "voice_profiles/VANSH/samples/TESTING1.wav",
+            "transcription": " The ancient manuscript, carefully preserved in climate control archives for centuries, contained integrated illustrations and detailed descriptions of medicinal plants that modern researchers and only now begin to fully understand and appreciate.",
+            "added_at": "2025-03-07 02:17:48"
+        },
+        "testing": {
+            "path": "voice_profiles/VANSH/samples/testing.wav",
+            "transcription": " The ancient manuscript, carefully preserved in climate control archives for centuries, contained integrated illustrations and detailed descriptions of medicinal plants that modern researchers and only now begin to fully understand and appreciate.",
+            "added_at": "2025-03-07 02:39:32"
+        },
+        "sample2": {
+            "path": "voice_profiles/VANSH/samples/sample2.wav",
+            "transcription": " And furious that you shared a private conversation with everyone in the office after promising to keep it confidential.",
+            "added_at": "2025-03-07 10:15:29"
+        },
+        "sample3": {
+            "path": "voice_profiles/VANSH/samples/sample3.wav",
+            "transcription": " I just received news that we are expecting twins and my heart is overflowing with happiness and excitement for our growing family.",
+            "added_at": "2025-03-07 10:30:49"
+        }
+    },
+    "styles": {
+        "normal test": {
+            "sample": "testing",
+            "added_at": "2025-03-07 02:40:50"
+        },
+        "normal": {
+            "sample": "TESTING1",
+            "added_at": "2025-03-07 10:15:08"
+        },
+        "angry": {
+            "sample": "sample2",
+            "added_at": "2025-03-07 10:15:39"
+        },
+        "happy": {
+            "sample": "sample3",
+            "added_at": "2025-03-07 10:30:59"
+        }
+    }
+}
