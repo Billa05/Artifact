@@ -1,0 +1,13 @@
+{
+    "name": "Biresh",
+    "description": "",
+    "created_at": "2025-03-07 16:30:04",
+    "samples": {
+        "sample1": {
+            "path": "voice_profiles/Biresh/samples/sample1.mp3",
+            "transcription": " Welcome to the Voice Cloning Studio. This is a sample text that you will read aloud to the AI model. Please speak clearly at a natural pace. Try to maintain a consistent tone throughout the recording. Most samples we collect the better your AI was. His clone will sound. This technology enables you to create content with your own voice without having to record everything manually each time.",
+            "added_at": "2025-03-07 16:33:27"
+        }
+    },
+    "styles": {}
+}
